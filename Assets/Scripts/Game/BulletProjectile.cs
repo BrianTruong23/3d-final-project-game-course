@@ -27,7 +27,7 @@ public sealed class BulletProjectile : MonoBehaviour
 
             transform.position = hit.point;
             
-            // If we hit an enemy, destroy it and give the player score
+            // If we hit an enemy, destroy it and update the enemy objective counter.
             EnemyDamage enemy = hit.collider.GetComponentInParent<EnemyDamage>();
             if (enemy != null)
             {
@@ -36,7 +36,7 @@ public sealed class BulletProjectile : MonoBehaviour
                 GameScoreManager scoreManager = FindAnyObjectByType<GameScoreManager>();
                 if (scoreManager != null)
                 {
-                    scoreManager.AddScore(2); // Give 2 points for defeating an enemy
+                    scoreManager.AddEnemyDefeat();
                 }
             }
 

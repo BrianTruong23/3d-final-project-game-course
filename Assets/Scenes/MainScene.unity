@@ -3186,8 +3186,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 420704811}
-  coinCount: 10
+  coinCount: 25
   pointsPerCoin: 1
+  coinsToWin: 20
+  enemiesToWin: 5
   collectibleAreaCenter: {x: 789, y: 49.8, z: 582}
   collectibleAreaSize: {x: 42, y: 36}
   gunPrefabs: []

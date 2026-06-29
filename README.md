@@ -1,57 +1,97 @@
 # 3D Final Project Game Course
 
-This repository is a Unity 3D starter project for the final game project. It includes a playable low-poly nature prototype scene so the project can be opened and tested immediately, while still leaving room to replace the placeholder shapes with final art and design choices.
+This repository contains my Unity 3D final project prototype. The game is a low-poly nature survival and collection level where the player explores a terrain scene, collects coins, picks up weapons, talks to NPCs, avoids enemies, and clears the level by completing the main objective.
 
-The current `SampleScene` builds a simple nature terrain at runtime with a controllable player, follow camera, collectibles, an interactive gate, UI feedback, and looping ambience.
+## Game Concept
 
-## Final Project Requirements
+The player is dropped into a low-poly forest environment and must search the area for coins while surviving wandering enemies. Weapons can be collected and equipped so the player can shoot enemies. NPCs provide guidance about the objective and the level uses UI feedback, audio, lighting, and post-processing to make the scene feel like a playable game prototype instead of a blank test scene.
 
-The finished project should include:
+## Main Objective
 
-- An original 3D game project in Unity.
-- A playable 3D world, level, terrain, arena, dungeon, track, or environment.
-- A controllable player character, vehicle, object, or avatar.
-- A working camera system that follows, views, or supports the player during gameplay.
-- At least three interactive, collectible, usable, or gameplay-related objects.
-- At least one interaction system, such as collecting items, using objects, opening doors, activating buttons, talking to NPCs, triggering events, or interacting with resources.
-- Basic UI feedback, such as item count, score, objective text, interaction prompt, progress text, or player status.
-- Basic audio or placeholder audio, such as background music, ambience, sound effects, UI sounds, or interaction sounds.
-- Original design choices so the project is not an exact copy of the project built in class.
-- A scene that runs without major errors that prevent the player from testing it.
+Clear the level by completing both goals:
+
+- Collect 20 coins.
+- Defeat 5 enemies.
+
+When both goals are complete, the game shows a level clear message and loads the restart scene. If the player loses all health after enemy contact, the game also loads the restart scene.
+
+## Current Scenes
+
+- `Assets/Scenes/StartScene.unity` - start menu with a play button.
+- `Assets/Scenes/MainScene.unity` - main playable level.
+- `Assets/Scenes/RestartScene.unity` - restart flow after winning or losing.
+
+## Controls
+
+- Move: `WASD` or left stick.
+- Look/Camera: mouse or right stick.
+- Jump: `Space`.
+- Sprint: `Left Shift`.
+- Talk to NPC: `E`.
+- Shoot equipped weapon: `F`.
+
+## Current Gameplay Systems
+
+- Third-person controllable player with follow camera.
+- Low-poly terrain environment with trees, grass, props, lighting, sky, and global volume post-processing.
+- Coin collectibles that update the coin counter.
+- Five weapon pickups: three revolvers and two shotguns.
+- Weapon equip system that places the selected weapon in the player's hand.
+- Shooting system with bullets and simple recoil.
+- Enemy objects with wandering AI.
+- Enemy damage and player health tracking.
+- Enemy defeat tracking separate from coin tracking.
+- NPC dialogue and interaction prompts.
+- Day/night cycle with different ambience behavior.
+- HUD with objective text, coin progress, enemy progress, weapon status, health icons, compass, prompts, and dialogue.
+- Win condition: collect 20 coins and defeat 5 enemies.
+- Lose condition: health reaches zero.
+- Restart scene and restart button.
+
+## Checkpoint 1 Progress
+
+- Playable 3D world/level: complete.
+- Player and camera setup: complete.
+- At least three interactive/gameplay objects: complete.
+- Interaction system and UI feedback: complete.
+- Documentation and playability: updated in this README.
+
+## Checkpoint 2 Progress
+
+- Five or more gameplay objects: coins, weapon pickups, enemies, NPCs, and player resources.
+- Three or more interaction systems: collect coins, collect/equip weapons, shoot enemies, talk to NPCs.
+- Progress tracking: coin counter, enemy counter, health, weapon status.
+- Challenge systems: wandering enemies, enemy damage/health loss, required enemy defeats, required coin target.
+- Clear goal: collect 20 coins and defeat 5 enemies.
+- Completion state: level clear message and restart scene.
+- Audio/visual polish: day/night ambience, background music, terrain details, imported low-poly assets, lighting, and post-processing.
+
+## Known Issues
+
+- The project is still a prototype, so enemy behavior and combat feedback are simple.
+- Some objects are runtime-spawned by scripts when the main scene starts.
+- UI uses Unity legacy `Text` components for fast checkpoint implementation.
+- The current win flow loads the restart scene after a short delay instead of showing a polished end screen.
 
 ## Included Audio
 
-The project includes these audio files in `Assets/Audio` for ambience, music, or placeholder sound design:
+The project includes these audio files in `Assets/Audio` for ambience, music, and placeholder sound design:
 
 - `leberch-atmospheric-documentary-509386.mp3`
 - `capaholiczsfx-forest-daytime-446356.mp3`
 - `eryliaa-night-forest-with-frogs-and-crickets-for-sleep-451153.mp3`
 
-## Current Starting Point
+## External Assets and Resources
 
-- Main playable scene: `Assets/Scenes/SampleScene.unity`
-- Audio folder: `Assets/Audio`
-- Script folder: `Assets/Scripts`
-- Material folder: `Assets/Materials`
+- Low Poly Environment Nature Free:
+  `https://assetstore.unity.com/packages/3d/environments/low-poly-environment-nature-free-lowpoly-medieval-fantasy-series-187052`
+- Starter Assets Third Person URP:
+  `https://assetstore.unity.com/packages/essentials/starter-assets-thirdperson-urp-196526`
+- Imported placeholder weapon models in `Assets/Collectibles`.
+- Imported placeholder enemy/NPC/animal models in `Assets/Enemies`, `Assets/NPC`, and `Assets/Animals`.
 
-## Controls
+## Repository
 
-- Move: `WASD` or arrow keys
-- Jump: `Space`
-- Interact with the gate: `E`
+GitHub repository:
 
-## Prototype Gameplay
-
-- Explore the low-poly nature terrain.
-- Collect all five crystals.
-- Walk to the gate and press `E` after collecting every crystal.
-- Watch the UI counter and prompt text for feedback.
-
-## Asset Store Notes
-
-The requested Asset Store packages are not committed directly because Unity Asset Store packages must be downloaded/imported through Unity using the account that owns or has added the assets:
-
-- Low Poly Environment Nature Free: `https://assetstore.unity.com/packages/3d/environments/low-poly-environment-nature-free-lowpoly-medieval-fantasy-series-187052`
-- Starter Assets Third Person URP: `https://assetstore.unity.com/packages/essentials/starter-assets-thirdperson-urp-196526`
-
-This project currently uses built-in Unity primitives and scripts so it can run without requiring those downloads. The placeholder terrain and player can be replaced later after importing the exact Asset Store packages through Unity.
+`https://github.com/BrianTruong23/3d-final-project-game-course`

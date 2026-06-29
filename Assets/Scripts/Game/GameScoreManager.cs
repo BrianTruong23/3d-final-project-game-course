@@ -11,6 +11,8 @@ public sealed class GameScoreManager : MonoBehaviour
     [Header("Collectibles")]
     [SerializeField, Min(1)] private int coinCount = 25;
     [SerializeField, Min(1)] private int pointsPerCoin = 1;
+    [SerializeField, Min(1)] private int coinsToWin = 20;
+    [SerializeField, Min(1)] private int enemiesToWin = 5;
     [SerializeField] private Vector3 collectibleAreaCenter = new Vector3(789f, 49.8f, 582f);
     [SerializeField] private Vector2 collectibleAreaSize = new Vector2(42f, 36f);
     [SerializeField] private GameObject[] gunPrefabs;
@@ -29,13 +31,15 @@ public sealed class GameScoreManager : MonoBehaviour
     [SerializeField] private Color markerColor = new Color(1f, 0.82f, 0.18f, 1f);
 
     private Text scoreText;
+    private Text enemyText;
     private Text weaponText;
     private Text promptText;
     private Text dialogueText;
     private PlayerGunController gunController;
     private Transform rightHand;
     private GameObject equippedGun;
-    private int score;
+    private int coinsCollected;
+    private int enemiesDefeated;
     private bool hasWon;
 
     private void Awake()
@@ -55,6 +59,7 @@ public sealed class GameScoreManager : MonoBehaviour
         SpawnGunPickups();
         // SpawnNpc(); // Removed static guide NPC since AutoSetup handles NPCs now
         UpdateScoreText();
+        UpdateEnemyText();
         UpdateWeaponText("None");
     }
 
@@ -62,15 +67,33 @@ public sealed class GameScoreManager : MonoBehaviour
     {
         if (hasWon) return;
 
-        score += Mathf.Max(0, amount);
+        coinsCollected += Mathf.Max(0, amount);
         UpdateScoreText();
+        CheckWinCondition();
+    }
 
-        if (score >= 20)
+    public void AddEnemyDefeat()
+    {
+        if (hasWon)
         {
-            hasWon = true;
-            ShowDialogue("YOU WIN! You collected 20 coins!");
-            Invoke(nameof(LoadRestartScene), 4f);
+            return;
         }
+
+        enemiesDefeated++;
+        UpdateEnemyText();
+        CheckWinCondition();
+    }
+
+    private void CheckWinCondition()
+    {
+        if (hasWon || coinsCollected < coinsToWin || enemiesDefeated < enemiesToWin)
+        {
+            return;
+        }
+
+        hasWon = true;
+        ShowDialogue($"LEVEL CLEAR! You collected {coinsToWin} coins and defeated {enemiesToWin} enemies.");
+        Invoke(nameof(LoadRestartScene), 4f);
     }
 
     private void LoadRestartScene()
@@ -155,11 +178,13 @@ public sealed class GameScoreManager : MonoBehaviour
             new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
         }
 
-        scoreText = CreateText(canvas.transform, "Score Text", "Score: 0", 24, TextAnchor.UpperLeft, new Vector2(20f, -18f), new Vector2(220f, 42f));
-        weaponText = CreateText(canvas.transform, "Weapon Text", "Weapon: None", 20, TextAnchor.UpperLeft, new Vector2(20f, -54f), new Vector2(340f, 36f));
+        CreateText(canvas.transform, "Objective Text", $"Objective: Collect {coinsToWin} coins and defeat {enemiesToWin} enemies to clear the level.", 20, TextAnchor.UpperLeft, new Vector2(20f, -18f), new Vector2(760f, 34f));
+        scoreText = CreateText(canvas.transform, "Coin Status Text", $"Coins: 0/{coinsToWin}", 22, TextAnchor.UpperLeft, new Vector2(20f, -54f), new Vector2(240f, 34f));
+        enemyText = CreateText(canvas.transform, "Enemy Status Text", $"Enemies: 0/{enemiesToWin}", 22, TextAnchor.UpperLeft, new Vector2(20f, -88f), new Vector2(260f, 34f));
+        weaponText = CreateText(canvas.transform, "Weapon Text", "Weapon: None", 20, TextAnchor.UpperLeft, new Vector2(20f, -122f), new Vector2(340f, 34f));
         promptText = CreateText(canvas.transform, "Interaction Prompt", string.Empty, 24, TextAnchor.LowerCenter, new Vector2(0f, 92f), new Vector2(760f, 42f));
         dialogueText = CreateText(canvas.transform, "Dialogue Text", string.Empty, 18, TextAnchor.LowerCenter, new Vector2(0f, 34f), new Vector2(940f, 64f));
-        CreateText(canvas.transform, "Purpose Text", "Talk to NPC to know your purpose", 18, TextAnchor.LowerRight, new Vector2(-20f, 20f), new Vector2(350f, 36f));
+        CreateText(canvas.transform, "Purpose Text", "Talk to an NPC for guidance.", 18, TextAnchor.LowerRight, new Vector2(-20f, 20f), new Vector2(350f, 36f));
         CreateCompass(canvas.transform);
     }
 
@@ -316,7 +341,15 @@ public sealed class GameScoreManager : MonoBehaviour
     {
         if (scoreText != null)
         {
-            scoreText.text = $"Score: {score}";
+            scoreText.text = $"Coins: {coinsCollected}/{coinsToWin}";
+        }
+    }
+
+    private void UpdateEnemyText()
+    {
+        if (enemyText != null)
+        {
+            enemyText.text = $"Enemies: {enemiesDefeated}/{enemiesToWin}";
         }
     }
 
