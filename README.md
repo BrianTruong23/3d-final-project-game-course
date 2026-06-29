@@ -1,8 +1,8 @@
 # 3D Final Project Game Course
 
-This repository is a clean Unity 3D starter project for the final game project. It is set up as a fresh project so the game design, level, player, interactions, UI, and gameplay systems can be built from scratch instead of continuing from the imported class example.
+This repository is a Unity 3D starter project for the final game project. It includes a playable low-poly nature prototype scene so the project can be opened and tested immediately, while still leaving room to replace the placeholder shapes with final art and design choices.
 
-The current project includes a blank `SampleScene` with a camera and directional light, plus starter folders for audio, scripts, and materials.
+The current `SampleScene` builds a simple nature terrain at runtime with a controllable player, follow camera, collectibles, an interactive gate, UI feedback, and looping ambience.
 
 ## Final Project Requirements
 
@@ -29,7 +29,29 @@ The project includes these audio files in `Assets/Audio` for ambience, music, or
 
 ## Current Starting Point
 
-- Main scene: `Assets/Scenes/SampleScene.unity`
+- Main playable scene: `Assets/Scenes/SampleScene.unity`
 - Audio folder: `Assets/Audio`
 - Script folder: `Assets/Scripts`
 - Material folder: `Assets/Materials`
+
+## Controls
+
+- Move: `WASD` or arrow keys
+- Jump: `Space`
+- Interact with the gate: `E`
+
+## Prototype Gameplay
+
+- Explore the low-poly nature terrain.
+- Collect all five crystals.
+- Walk to the gate and press `E` after collecting every crystal.
+- Watch the UI counter and prompt text for feedback.
+
+## Asset Store Notes
+
+The requested Asset Store packages are not committed directly because Unity Asset Store packages must be downloaded/imported through Unity using the account that owns or has added the assets:
+
+- Low Poly Environment Nature Free: `https://assetstore.unity.com/packages/3d/environments/low-poly-environment-nature-free-lowpoly-medieval-fantasy-series-187052`
+- Starter Assets Third Person URP: `https://assetstore.unity.com/packages/essentials/starter-assets-thirdperson-urp-196526`
+
+This project currently uses built-in Unity primitives and scripts so it can run without requiring those downloads. The placeholder terrain and player can be replaced later after importing the exact Asset Store packages through Unity.
