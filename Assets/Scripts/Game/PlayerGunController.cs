@@ -10,21 +10,68 @@ public sealed class PlayerGunController : MonoBehaviour
     private float nextFireTime;
     private Material bulletMaterial;
 
+    private Vector3 originalLocalPos;
+    private Quaternion originalLocalRot;
+    private float recoilTimer = 0f;
+    private float recoilDuration = 0.15f;
+
     public bool HasGun => equippedGun != null;
 
     public void SetEquippedGun(Transform gun)
     {
         equippedGun = gun;
+        if (gun != null)
+        {
+            originalLocalPos = gun.localPosition;
+            originalLocalRot = gun.localRotation;
+        }
     }
 
     private void Update()
     {
-        if (equippedGun == null || Time.time < nextFireTime)
+        if (equippedGun == null)
         {
             return;
         }
 
-        if (Input.GetMouseButtonDown(0))
+        if (recoilTimer > 0f)
+        {
+            recoilTimer -= Time.deltaTime;
+            float t = 1f - Mathf.Clamp01(recoilTimer / recoilDuration);
+            float kick = Mathf.Sin(t * Mathf.PI);
+
+            equippedGun.localPosition = originalLocalPos;
+            equippedGun.localRotation = originalLocalRot;
+            
+            // Kick backwards and pitch up in world space for realistic recoil
+            equippedGun.position += transform.forward * (-0.08f * kick) + transform.up * (0.04f * kick);
+            equippedGun.Rotate(transform.right, -15f * kick, Space.World);
+        }
+        else
+        {
+            equippedGun.localPosition = originalLocalPos;
+            equippedGun.localRotation = originalLocalRot;
+        }
+
+        if (Time.time < nextFireTime)
+        {
+            return;
+        }
+
+        bool shootPressed = false;
+#if ENABLE_INPUT_SYSTEM
+        if (UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.fKey.wasPressedThisFrame)
+        {
+            shootPressed = true;
+        }
+#else
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            shootPressed = true;
+        }
+#endif
+
+        if (shootPressed)
         {
             Shoot();
         }
@@ -33,9 +80,11 @@ public sealed class PlayerGunController : MonoBehaviour
     private void Shoot()
     {
         nextFireTime = Time.time + fireCooldown;
+        recoilTimer = recoilDuration;
 
-        Camera camera = Camera.main;
-        Vector3 direction = camera != null ? camera.transform.forward : transform.forward;
+        // Use the player's facing direction instead of the camera's
+        Vector3 direction = transform.forward;
+        // Spawn the bullet slightly ahead of the gun in the facing direction
         Vector3 origin = equippedGun.position + direction.normalized * 0.7f + Vector3.up * 0.1f;
 
         GameObject bullet = GameObject.CreatePrimitive(PrimitiveType.Sphere);

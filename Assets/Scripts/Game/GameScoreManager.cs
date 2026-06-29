@@ -9,7 +9,7 @@ public sealed class GameScoreManager : MonoBehaviour
     [SerializeField] private Transform player;
 
     [Header("Collectibles")]
-    [SerializeField, Min(1)] private int coinCount = 10;
+    [SerializeField, Min(1)] private int coinCount = 25;
     [SerializeField, Min(1)] private int pointsPerCoin = 1;
     [SerializeField] private Vector3 collectibleAreaCenter = new Vector3(789f, 49.8f, 582f);
     [SerializeField] private Vector2 collectibleAreaSize = new Vector2(42f, 36f);
@@ -36,6 +36,7 @@ public sealed class GameScoreManager : MonoBehaviour
     private Transform rightHand;
     private GameObject equippedGun;
     private int score;
+    private bool hasWon;
 
     private void Awake()
     {
@@ -52,15 +53,29 @@ public sealed class GameScoreManager : MonoBehaviour
         BuildUi();
         SpawnCoins();
         SpawnGunPickups();
-        SpawnNpc();
+        // SpawnNpc(); // Removed static guide NPC since AutoSetup handles NPCs now
         UpdateScoreText();
         UpdateWeaponText("None");
     }
 
     public void AddScore(int amount)
     {
+        if (hasWon) return;
+
         score += Mathf.Max(0, amount);
         UpdateScoreText();
+
+        if (score >= 20)
+        {
+            hasWon = true;
+            ShowDialogue("YOU WIN! You collected 20 coins!");
+            Invoke(nameof(LoadRestartScene), 4f);
+        }
+    }
+
+    private void LoadRestartScene()
+    {
+        UnityEngine.SceneManagement.SceneManager.LoadScene("RestartScene");
     }
 
     public void EquipGun(GameObject gunPrefab, string weaponName)
@@ -83,9 +98,11 @@ public sealed class GameScoreManager : MonoBehaviour
 
         equippedGun = gunPrefab != null ? Instantiate(gunPrefab, holdTarget) : CreateFallbackGun(holdTarget, weaponName);
         equippedGun.name = $"Equipped {weaponName}";
-        equippedGun.transform.localPosition = new Vector3(0.12f, 0.02f, 0.04f);
-        equippedGun.transform.localRotation = Quaternion.Euler(0f, 90f, 90f);
-        equippedGun.transform.localScale = gunPrefab != null ? Vector3.one * 0.28f : Vector3.one;
+        equippedGun.transform.localPosition = new Vector3(0.02f, 0.04f, 0.08f);
+        // Rotated 45 degrees to the right as requested
+        equippedGun.transform.localRotation = Quaternion.Euler(180f, -45f, -90f);
+        // Apply scaling to the fallback gun as well to keep it a reasonable size
+        equippedGun.transform.localScale = gunPrefab != null ? Vector3.one * 0.4f : Vector3.one * 0.65f;
         DisableGameplayPhysics(equippedGun);
 
         if (gunController == null)
@@ -95,7 +112,7 @@ public sealed class GameScoreManager : MonoBehaviour
 
         gunController.SetEquippedGun(equippedGun.transform);
         UpdateWeaponText(weaponName);
-        ShowDialogue($"Equipped {weaponName}. Left click to shoot.");
+        ShowDialogue($"Equipped {weaponName}. Press F to shoot.");
     }
 
     public void SetPrompt(string message)
@@ -142,6 +159,7 @@ public sealed class GameScoreManager : MonoBehaviour
         weaponText = CreateText(canvas.transform, "Weapon Text", "Weapon: None", 20, TextAnchor.UpperLeft, new Vector2(20f, -54f), new Vector2(340f, 36f));
         promptText = CreateText(canvas.transform, "Interaction Prompt", string.Empty, 24, TextAnchor.LowerCenter, new Vector2(0f, 92f), new Vector2(760f, 42f));
         dialogueText = CreateText(canvas.transform, "Dialogue Text", string.Empty, 18, TextAnchor.LowerCenter, new Vector2(0f, 34f), new Vector2(940f, 64f));
+        CreateText(canvas.transform, "Purpose Text", "Talk to NPC to know your purpose", 18, TextAnchor.LowerRight, new Vector2(-20f, 20f), new Vector2(350f, 36f));
         CreateCompass(canvas.transform);
     }
 
@@ -369,6 +387,11 @@ public sealed class GameScoreManager : MonoBehaviour
             rect.anchorMin = new Vector2(0.5f, 0f);
             rect.pivot = new Vector2(0.5f, 0f);
         }
+        else if (alignment == TextAnchor.LowerRight)
+        {
+            rect.anchorMin = new Vector2(1f, 0f);
+            rect.pivot = new Vector2(1f, 0f);
+        }
         else
         {
             rect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -413,16 +436,16 @@ public sealed class GameScoreManager : MonoBehaviour
         GameObject body = GameObject.CreatePrimitive(PrimitiveType.Cube);
         body.name = "Gun Body";
         body.transform.SetParent(root.transform, false);
-        body.transform.localPosition = new Vector3(0.14f, 0f, 0f);
-        body.transform.localScale = new Vector3(0.55f, 0.16f, 0.16f);
+        body.transform.localPosition = new Vector3(0.12f, 0f, 0f);
+        body.transform.localScale = new Vector3(0.3f, 0.08f, 0.06f);
         body.GetComponent<Renderer>().sharedMaterial = CreateRuntimeMaterial("Runtime Gun Dark", new Color(0.08f, 0.08f, 0.09f));
 
         GameObject handle = GameObject.CreatePrimitive(PrimitiveType.Cube);
         handle.name = "Gun Handle";
         handle.transform.SetParent(root.transform, false);
-        handle.transform.localPosition = new Vector3(-0.08f, -0.16f, 0f);
+        handle.transform.localPosition = new Vector3(0.0f, -0.1f, 0f);
         handle.transform.localRotation = Quaternion.Euler(0f, 0f, -18f);
-        handle.transform.localScale = new Vector3(0.16f, 0.32f, 0.14f);
+        handle.transform.localScale = new Vector3(0.07f, 0.18f, 0.05f);
         handle.GetComponent<Renderer>().sharedMaterial = CreateRuntimeMaterial("Runtime Gun Handle", new Color(0.18f, 0.12f, 0.07f));
 
         DisableGameplayPhysics(root);

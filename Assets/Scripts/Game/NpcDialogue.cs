@@ -13,11 +13,19 @@ public sealed class NpcDialogue : MonoBehaviour
         game = manager;
     }
 
+    private void Start()
+    {
+        if (game == null)
+        {
+            game = FindAnyObjectByType<GameScoreManager>();
+        }
+    }
+
     private void Update()
     {
-        if (playerInRange && Input.GetKeyDown(KeyCode.E))
+        if (playerInRange && Input.GetKeyDown(KeyCode.E) && game != null)
         {
-            game.ShowDialogue("Guide: Collect coins, learn each weapon, and practice shooting before exploring deeper into the forest.");
+            game.ShowDialogue("Guide: Collect 20 coins to win the game!");
         }
     }
 
