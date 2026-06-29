@@ -7,24 +7,64 @@ public sealed class PlayerGunController : MonoBehaviour
     [SerializeField] private float fireCooldown = 0.2f;
 
     private Transform equippedGun;
+    private Transform recoilBone;
     private float nextFireTime;
     private Material bulletMaterial;
+    private Color bulletColor = new Color(1f, 0.92f, 0.2f);
+    private int weaponIndex;
+    private AudioSource shotAudioSource;
+    private AudioClip shotClip;
 
     private Vector3 originalLocalPos;
     private Quaternion originalLocalRot;
+    private Vector3 originalRecoilBoneLocalPos;
+    private Quaternion originalRecoilBoneLocalRot;
     private float recoilTimer = 0f;
-    private float recoilDuration = 0.15f;
+    [SerializeField] private float recoilDuration = 0.24f;
+    [SerializeField] private float recoilUpDistance = 0.09f;
+    [SerializeField] private float recoilBackDistance = 0.04f;
+    [SerializeField] private float recoilPitchDegrees = 22f;
+    [SerializeField] private float shoulderRecoilUpDistance = 0.08f;
+    [SerializeField] private float shoulderRecoilForwardDistance = 0.04f;
+    [SerializeField] private float shoulderRecoilPitchDegrees = 18f;
 
     public bool HasGun => equippedGun != null;
 
     public void SetEquippedGun(Transform gun)
     {
+        SetEquippedGun(gun, bulletColor, weaponIndex);
+    }
+
+    public void SetEquippedGun(Transform gun, Color weaponColor, int inventoryIndex)
+    {
         equippedGun = gun;
+        bulletColor = weaponColor;
+        weaponIndex = Mathf.Max(0, inventoryIndex);
+        bulletMaterial = null;
+        shotClip = CreateShotClip(weaponIndex);
+
         if (gun != null)
         {
             originalLocalPos = gun.localPosition;
             originalLocalRot = gun.localRotation;
+            recoilBone = FindRecoilBone(gun.parent);
+            if (recoilBone != null && recoilBone != transform)
+            {
+                originalRecoilBoneLocalPos = recoilBone.localPosition;
+                originalRecoilBoneLocalRot = recoilBone.localRotation;
+            }
         }
+    }
+
+    public void RefreshEquippedGunRestPose()
+    {
+        if (equippedGun == null)
+        {
+            return;
+        }
+
+        originalLocalPos = equippedGun.localPosition;
+        originalLocalRot = equippedGun.localRotation;
     }
 
     private void Update()
@@ -32,25 +72,6 @@ public sealed class PlayerGunController : MonoBehaviour
         if (equippedGun == null)
         {
             return;
-        }
-
-        if (recoilTimer > 0f)
-        {
-            recoilTimer -= Time.deltaTime;
-            float t = 1f - Mathf.Clamp01(recoilTimer / recoilDuration);
-            float kick = Mathf.Sin(t * Mathf.PI);
-
-            equippedGun.localPosition = originalLocalPos;
-            equippedGun.localRotation = originalLocalRot;
-            
-            // Kick backwards and pitch up in world space for realistic recoil
-            equippedGun.position += transform.forward * (-0.08f * kick) + transform.up * (0.04f * kick);
-            equippedGun.Rotate(transform.right, -15f * kick, Space.World);
-        }
-        else
-        {
-            equippedGun.localPosition = originalLocalPos;
-            equippedGun.localRotation = originalLocalRot;
         }
 
         if (Time.time < nextFireTime)
@@ -77,6 +98,75 @@ public sealed class PlayerGunController : MonoBehaviour
         }
     }
 
+    private void LateUpdate()
+    {
+        if (equippedGun == null)
+        {
+            return;
+        }
+
+        if (recoilTimer <= 0f)
+        {
+            equippedGun.localPosition = originalLocalPos;
+            equippedGun.localRotation = originalLocalRot;
+            ResetShoulderPose();
+            return;
+        }
+
+        float t = 1f - Mathf.Clamp01(recoilTimer / recoilDuration);
+        float kick = Mathf.Sin(t * Mathf.PI);
+
+        equippedGun.localPosition = originalLocalPos + new Vector3(0f, recoilUpDistance * kick, -recoilBackDistance * kick);
+        equippedGun.localRotation = originalLocalRot * Quaternion.Euler(-recoilPitchDegrees * kick, 0f, 0f);
+        ApplyShoulderRecoil(kick);
+        recoilTimer -= Time.deltaTime;
+    }
+
+    private void ApplyShoulderRecoil(float kick)
+    {
+        if (recoilBone == null || recoilBone == transform)
+        {
+            return;
+        }
+
+        recoilBone.localPosition = originalRecoilBoneLocalPos + new Vector3(0f, shoulderRecoilUpDistance * kick, shoulderRecoilForwardDistance * kick);
+        recoilBone.localRotation = originalRecoilBoneLocalRot * Quaternion.Euler(-shoulderRecoilPitchDegrees * kick, 0f, 0f);
+    }
+
+    private void ResetShoulderPose()
+    {
+        if (recoilBone == null || recoilBone == transform)
+        {
+            return;
+        }
+
+        recoilBone.localPosition = originalRecoilBoneLocalPos;
+        recoilBone.localRotation = originalRecoilBoneLocalRot;
+    }
+
+    private Transform FindRecoilBone(Transform start)
+    {
+        Transform fallbackUpperArm = null;
+        Transform current = start;
+
+        while (current != null && current != transform)
+        {
+            if (current.name.Contains("Right_Shoulder"))
+            {
+                return current;
+            }
+
+            if (fallbackUpperArm == null && current.name.Contains("Right_UpperArm"))
+            {
+                fallbackUpperArm = current;
+            }
+
+            current = current.parent;
+        }
+
+        return fallbackUpperArm != null ? fallbackUpperArm : start;
+    }
+
     private void Shoot()
     {
         nextFireTime = Time.time + fireCooldown;
@@ -101,7 +191,46 @@ public sealed class PlayerGunController : MonoBehaviour
         Renderer renderer = bullet.GetComponent<Renderer>();
         renderer.sharedMaterial = GetBulletMaterial();
 
+        CreateMuzzleFlash(origin, direction);
+        PlayShotSound();
         bullet.AddComponent<BulletProjectile>().Initialize(direction, bulletSpeed, bulletLifetime);
+    }
+
+    private void CreateMuzzleFlash(Vector3 origin, Vector3 direction)
+    {
+        GameObject flash = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        flash.name = "Muzzle Flash";
+        flash.transform.position = origin + direction.normalized * 0.25f;
+        flash.transform.localScale = Vector3.one * (0.32f + weaponIndex * 0.04f);
+
+        Collider collider = flash.GetComponent<Collider>();
+        if (collider != null)
+        {
+            collider.enabled = false;
+        }
+
+        Renderer renderer = flash.GetComponent<Renderer>();
+        renderer.sharedMaterial = GetBulletMaterial();
+        Destroy(flash, 0.08f);
+    }
+
+    private void PlayShotSound()
+    {
+        if (shotAudioSource == null)
+        {
+            shotAudioSource = gameObject.AddComponent<AudioSource>();
+            shotAudioSource.playOnAwake = false;
+            shotAudioSource.spatialBlend = 0.25f;
+            shotAudioSource.volume = 0.35f;
+        }
+
+        if (shotClip == null)
+        {
+            shotClip = CreateShotClip(weaponIndex);
+        }
+
+        shotAudioSource.pitch = 0.9f + weaponIndex * 0.08f;
+        shotAudioSource.PlayOneShot(shotClip);
     }
 
     private Material GetBulletMaterial()
@@ -119,7 +248,28 @@ public sealed class PlayerGunController : MonoBehaviour
 
         bulletMaterial = new Material(shader);
         bulletMaterial.name = "Runtime Bullet Material";
-        bulletMaterial.color = new Color(1f, 0.92f, 0.2f);
+        bulletMaterial.color = bulletColor;
         return bulletMaterial;
+    }
+
+    private static AudioClip CreateShotClip(int index)
+    {
+        const int sampleRate = 22050;
+        int sampleCount = Mathf.RoundToInt(sampleRate * 0.12f);
+        float[] samples = new float[sampleCount];
+        float frequency = 160f + index * 85f;
+
+        for (int i = 0; i < sampleCount; i++)
+        {
+            float time = i / (float)sampleRate;
+            float envelope = Mathf.Exp(-time * (22f + index * 2f));
+            float tone = Mathf.Sin(2f * Mathf.PI * frequency * time);
+            float click = i < sampleRate * 0.015f ? 0.6f : 0f;
+            samples[i] = (tone * 0.45f + click) * envelope;
+        }
+
+        AudioClip clip = AudioClip.Create($"Runtime Gun Shot {index + 1}", sampleCount, 1, sampleRate, false);
+        clip.SetData(samples, 0);
+        return clip;
     }
 }

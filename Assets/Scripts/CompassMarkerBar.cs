@@ -6,6 +6,10 @@ public class CompassMarkerBar : MonoBehaviour
     [SerializeField] private Transform target;
     [SerializeField] private RectTransform marker;
     [SerializeField] private Text headingText;
+    [SerializeField] private bool trackNearestEnemy = true;
+
+    private EnemyDamage nearestEnemy;
+    private float nextEnemySearchTime;
 
     public void Initialize(Transform targetTransform, RectTransform markerTransform, Text headingLabel)
     {
@@ -27,7 +31,8 @@ public class CompassMarkerBar : MonoBehaviour
             return;
         }
 
-        float heading = Mathf.Repeat(target.eulerAngles.y, 360f);
+        Transform enemy = trackNearestEnemy ? GetNearestEnemy() : null;
+        float heading = enemy != null ? GetRelativeEnemyHeading(enemy) : 0f;
 
         if (marker != null)
         {
@@ -36,14 +41,54 @@ public class CompassMarkerBar : MonoBehaviour
 
         if (headingText != null)
         {
-            headingText.text = $"{GetCardinalDirection(heading)} {Mathf.RoundToInt(heading):000}\u00b0";
+            if (enemy != null)
+            {
+                float distance = Vector3.Distance(target.position, enemy.position);
+                headingText.text = $"Enemy {Mathf.RoundToInt(distance)}m";
+            }
+            else
+            {
+                headingText.text = "Enemy --";
+            }
         }
     }
 
-    private static string GetCardinalDirection(float heading)
+    private Transform GetNearestEnemy()
     {
-        string[] directions = { "N", "NE", "E", "SE", "S", "SW", "W", "NW" };
-        int index = Mathf.RoundToInt(heading / 45f) % directions.Length;
-        return directions[index];
+        if (nearestEnemy != null && Time.time < nextEnemySearchTime)
+        {
+            return nearestEnemy.transform;
+        }
+
+        nextEnemySearchTime = Time.time + 0.25f;
+        EnemyDamage[] enemies = FindObjectsByType<EnemyDamage>(FindObjectsSortMode.None);
+        float bestDistance = float.PositiveInfinity;
+        nearestEnemy = null;
+
+        foreach (EnemyDamage enemy in enemies)
+        {
+            float distance = (enemy.transform.position - target.position).sqrMagnitude;
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                nearestEnemy = enemy;
+            }
+        }
+
+        return nearestEnemy != null ? nearestEnemy.transform : null;
+    }
+
+    private float GetRelativeEnemyHeading(Transform enemy)
+    {
+        Vector3 direction = enemy.position - target.position;
+        direction.y = 0f;
+
+        if (direction.sqrMagnitude < 0.01f)
+        {
+            return 0f;
+        }
+
+        float worldHeading = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
+        return Mathf.Repeat(worldHeading - target.eulerAngles.y, 360f);
     }
 }

@@ -6,13 +6,15 @@ public sealed class GunPickup : MonoBehaviour
     private GameScoreManager game;
     private GameObject gunPrefab;
     private string weaponName;
+    private Color weaponColor = Color.white;
     private bool collected;
 
-    public void Initialize(GameScoreManager manager, GameObject prefab, string displayName)
+    public void Initialize(GameScoreManager manager, GameObject prefab, string displayName, Color displayColor)
     {
         game = manager;
         gunPrefab = prefab;
         weaponName = displayName;
+        weaponColor = displayColor;
     }
 
     private void Update()
@@ -28,7 +30,7 @@ public sealed class GunPickup : MonoBehaviour
         }
 
         collected = true;
-        game.EquipGun(gunPrefab, weaponName);
+        game.EquipGun(gunPrefab, weaponName, weaponColor);
         Destroy(gameObject);
     }
 }

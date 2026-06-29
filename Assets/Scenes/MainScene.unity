@@ -3192,7 +3192,12 @@ MonoBehaviour:
   enemiesToWin: 5
   collectibleAreaCenter: {x: 789, y: 49.8, z: 582}
   collectibleAreaSize: {x: 42, y: 36}
-  gunPrefabs: []
+  gunPrefabs:
+  - {fileID: 100000, guid: ea8ccfc81a2494a29895dfba8b66e895, type: 3}
+  - {fileID: 100000, guid: f24d9543f50dd46dd945c52330bc1095, type: 3}
+  - {fileID: 100000, guid: b2f8c44e237a14df8a3c13ef75079512, type: 3}
+  - {fileID: 100000, guid: 2705b28a0f66a4232acba468584906b2, type: 3}
+  - {fileID: 100000, guid: 197d80c60cdf741ccbc87538cc2607e1, type: 3}
   gunNames:
   - Revolver 1
   - Revolver 2

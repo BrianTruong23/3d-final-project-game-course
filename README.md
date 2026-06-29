@@ -29,6 +29,8 @@ When both goals are complete, the game shows a level clear message and loads the
 - Sprint: `Left Shift`.
 - Talk to NPC: `E`.
 - Shoot equipped weapon: `F`.
+- Open/close inventory: `Y`.
+- Switch acquired guns: `1`, `2`, or `3`.
 
 ## Current Gameplay Systems
 
@@ -37,6 +39,8 @@ When both goals are complete, the game shows a level clear message and loads the
 - Coin collectibles that update the coin counter.
 - Five weapon pickups: three revolvers and two shotguns.
 - Weapon equip system that places the selected weapon in the player's hand.
+- Inventory system that tracks unique acquired guns and shows the chest count.
+- Gun switching for the first three acquired guns using number keys.
 - Shooting system with bullets and simple recoil.
 - Enemy objects with wandering AI.
 - Enemy damage and player health tracking.
